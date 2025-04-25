@@ -9,5 +9,4 @@ Copy and paste `swagger.json` to https://editor.swagger.io/
 
 In progress...
 
-Currently only [Product Request](https://keepa.com/#!discuss/t/products/1
-10) is available in swagger.json.
+Currently only [Product Request](https://keepa.com/#!discuss/t/products/110) is available in swagger.json.
