@@ -1,0 +1,2606 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Keepa API",
+        "description": "Keepa API"
+    },
+    "servers": [
+        {
+            "url": "https://api.keepa.com/",
+            "description": "Keepa API server"
+        }
+    ],
+    "paths": {
+        "/product": {
+            "get": {
+                "tags": [
+                    "Product Request"
+                ],
+                "summary": "Get Keepa product",
+                "description": "Get detailed info of product from Keepa. The product object contains all of Keepa price history data and basic product information. The limit is 60 requests per minute. \n\nKeepa Time Minutes. Time format used for all Keepa timestamps. To convert to an uncompressed Unix epoch time: \n\nFor milliseconds: `(keepaTime + 21564000) * 60000` \n\nFor seconds: `(keepaTime + 21564000) * 60`",
+                "operationId": "getKeepaProduct",
+                "parameters": [
+                    {
+                        "name": "asin",
+                        "in": "query",
+                        "description": "The ASIN of the product you want to request.",
+                        "required": true,
+                        "example": "B00U26V4VQ"
+                    },
+                    {
+                        "name": "domain",
+                        "in": "query",
+                        "description": " Integer value for the Amazon locale you want to access. Valid values: [ 1: com | 2: co.uk | 3: de | 4: fr | 5: co.jp | 6: ca | 8: it | 9: es | 10: in | 11: com.mx ]",
+                        "required": false,
+                        "example": "1"
+                    },
+                    {
+                        "name": "stats",
+                        "in": "query",
+                        "description": "Include a `stats` field with current prices and statistics. If specified, the product object will include a `stats` field with quick access to current prices, min/max prices, and weighted mean values. If the `offers` parameter is used, it will also provide Buy Box information. \n\nYou can provide the `stats` parameter in two forms: \n\nLast x days (positive integer value): Calculates the stats for the last x days. \n\nInterval: Specify a date range for the stats calculation using two timestamps (Unix epoch time in milliseconds) or two date strings (ISO8601 format, UTC). \n\nNote: If there is insufficient historical data for a price type, the actual interval of the weighted mean calculation may be shorter than specified. All data provided via the `stats` field are calculated using the product object’s csv history field; no new data is provided through this parameter. \n\nExamples: \n\n`&stats=180` (last 180 days) \n\n`&stats=2015-10-20,2015-12-24` (from Oct 20 to Dec 24, 2015) \n\n`&stats=2011-01-01,2025-01-01` (entire history) \n\n`&stats=1445299200000,1450915200000` (Unix epoch time in milliseconds, from Oct 20 to Dec 24, 2015)",
+                        "required": false,
+                        "example": "30"
+                    },
+                    {
+                        "name": "update",
+                        "in": "query",
+                        "description": "Force a refresh if the product’s last update is older than specified hours. Positive integer value. If the product’s last update is older than `update` hours, force a refresh. The default value used by the API is 1 hour. This parameter also works in conjunction with the `offers` parameter. \n\nUsing this parameter, you can achieve the following: \n\nSpeed up requests: If up-to-date data is not required, use a higher value than 1 hour. \n\nAlways retrieve live data: Use the value 0. \n\nNo update at all: Use the value -1.",
+                        "required": false,
+                        "example": "48"
+                    },
+                    {
+                        "name": "history",
+                        "in": "query",
+                        "description": "Exclude historical data fields to reduce response size and processing time. Boolean value (`0` = false, `1` = true). If specified and set to `0`, the product object will not include the `csv`, `salesRanks`, and `salesRankReferenceHistory` fields. If you do not need them, use this to have them removed from the response. This will improve processing time and considerably decrease the size of the response.",
+                        "required": false,
+                        "example": "1"
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "description": "Limit historical data to the recent `X` days. Any positive integer value. If specified with a positive value `X`, the product object will limit all historical data to the recent `X` days. This includes the `csv`, `buyBoxSellerIdHistory`, `salesRankReferenceHistory`, `salesRanks`, `offers`, and `offers.offerCSV` fields. If you do not need old historical data, use this to reduce the response size and improve processing time. The parameter does not use calendar days; so `1 day` equals the last 24 hours.",
+                        "required": false,
+                        "example": "90"
+                    },
+                    {
+                        "name": "offers",
+                        "in": "query",
+                        "description": "Retrieve up-to-date marketplace offers. Positive integer value between `20` and `100`. Determines the number of `up-to-date` marketplace offers to retrieve. \n\nIf the `offers` parameter is used, the product object will contain additional data: \n\nMarketplace offer objects \n\nInformation on the New and Used Buy Box, including a history of Buy Box winners \n\nPrice history data for FBA (Fulfillment by Amazon), FBM (Fulfillment by Merchant), Warehouse Deals, Prime exclusive, and all Used and Collectible sub-conditions, including shipping and handling costs \n\nRating and review count history \n\nAll offers-related data is updated independently, irregularly, and not as often as all other product data. Keep this in mind when evaluating the additional historical data. \n\nNotes: \n\nThe returned product may have more offers than specified because Keepa keep a history of offers. The number specified in this parameter determines how many offers Keepa attempt to retrieve/update from Amazon. Each offer object has a `lastSeen` field that can be used to filter up-to-date offers. \n\nAll offers-related data is freshly updated and up-to-date. \n\nThe request will require more time to complete, ranging from 2 to 20 seconds with an average of 5 seconds. \n\nThe request will return successfully and will contain, if available, all `historical` offers (unless `only-live-offers` is used) and product data. You can retry the request after a few minutes. \n\nLimitations: \n\nNot available for digital products, movie rentals, Amazon Fresh, and Amazon Pantry.",
+                        "required": false,
+                        "example": "20"
+                    },
+                    {
+                        "name": "only-live-offers",
+                        "in": "query",
+                        "description": "Include only live marketplace offers; reduces response size. Boolean value (`0` = false, `1` = true). If specified and set to `1`, the product object will only include live marketplace offers (when used in combination with the `offers` parameter). If you do not need historical offers, use this to reduce the response size and improve processing time.",
+                        "required": false,
+                        "example": "0"
+                    },
+                    {
+                        "name": "rental",
+                        "in": "query",
+                        "description": "Collect rental prices when available. Boolean value (`0` = false, `1` = true). Can only be used in conjunction with the `offers` parameter. If specified and set to `1`, the rental price will be collected when available. \n\nNote: \n\nRental prices are only available for Amazon US and only for books (not for eBooks).",
+                        "required": false,
+                        "example": "1"
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "description": "Include existing rating and review count history. Boolean value (`0` = false, `1` = true). If specified and set to `1`, the product object will include Keepa existing `RATING` and `COUNT_REVIEWS` history in the `csv` field, regardless of whether the `offers` parameter is used. \n\nUsing this parameter does not trigger an update to those two fields; it only gives access to Keepa existing data if available. If you need up-to-date data, you have to use the `offers` parameter. Use this if you need access to the rating data, which may be outdated, but do not need any other data fields provided through the `offers` parameter to speed up the request. If there is no rating data returned, you can still make another request using the `offers` parameter.",
+                        "required": false,
+                        "example": "1"
+                    },
+                    {
+                        "name": "buybox",
+                        "in": "query",
+                        "description": "Include Buy Box related data. Boolean value (`0` = false, `1` = true). If specified and set to `1`, the product and statistics object will include all available Buy Box related data: \n\nCurrent price, price history, and statistical values \n\n`buyBoxSellerIdHistory` \n\nAll Buy Box fields in the statistics object \n\nThe `buybox` parameter does not trigger a fresh data collection. If the `offers` parameter is used, the `buybox` parameter is ignored, as the `offers` parameter also provides access to all Buy Box related data. To access the statistics object, the `stats` parameter is required.",
+                        "required": false,
+                        "example": "1"
+                    },
+                    {
+                        "name": "stock",
+                        "in": "query",
+                        "description": "Include stock information in offers. Boolean value (`0` = false, `1` = true). If specified together with the `offers` parameter and set to `1`, the marketplace offer objects will include the `stockCSV` field, and the product object will include the `lastStockUpdate` field. \n\nNote: \n\nThe `stock` parameter is not guaranteed to avoid triggering a fresh stock data collection. The request will require more time to retrieve stock data, ranging from 1 to 2 seconds per offer.",
+                        "required": false,
+                        "example": "1"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Keepa product response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KeepaProductsResponse"
+                                }
+                            }
+                        }
+                    },
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+    },
+    "components": {
+        "schemas": { 
+            "KeepaProductsResponse": {
+              "properties": {
+                "timestamp": {
+                  "description": "The timestamp of the response in milliseconds since epoch.",
+                  "type": "integer",
+                  "example": 1745590141782
+                },
+                "tokensLeft": {
+                  "description": "The number of tokens remaining in the user's quota.",
+                  "type": "integer",
+                  "example": 59446
+                },
+                "refillIn": {
+                  "description": "The time in seconds until the next token refill.",
+                  "type": "integer",
+                  "example": 522
+                },
+                "refillRate": {
+                  "description": "The rate at which tokens are refilled per second.",
+                  "type": "integer",
+                  "example": 1000
+                },
+                "tokenFlowReduction": {
+                  "description": "The reduction in token flow, if any.",
+                  "type": "integer",
+                  "example": 0
+                },
+                "tokensConsumed": {
+                  "description": "The number of tokens consumed for the request.",
+                  "type": "integer",
+                  "example": 1
+                },
+                "processingTimeInMs": {
+                  "description": "The time taken to process the request in milliseconds.",
+                  "type": "integer",
+                  "example": 17
+                },
+                "products": {
+                  "description": "A products field containing an array of [product objects](https://keepa.com/#!discuss/t/product-object/116) with an entry for each ASIN that was requested.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/components/schemas/KeepaProduct"
+                  }
+                }
+              }
+            },
+            "KeepaProductStats": {
+                "properties": {
+                    "current": {
+                        "description": "Contains the last updated product prices/ranks using the Price Type indexing (refer to the `csv` field in the `KeepaProduct`). Prices are integers representing the smallest currency unit for the respective Amazon locale (e.g., euro cents or yen). A value of -1 indicates no offer was available in the given interval (e.g., out of stock).",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            2500,
+                            2500,
+                            -1,
+                            56,
+                            5499,
+                            -1,
+                            -1,
+                            4647,
+                            -1,
+                            -1,
+                            3367,
+                            7,
+                            -1,
+                            -1,
+                            -1,
+                            7,
+                            48,
+                            37323,
+                            2500,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            1599,
+                            219,
+                            -1,
+                            -1,
+                            -1,
+                            -1
+                        ]
+                    },
+                    "avg": {
+                        "description": "Contains the historical weighted mean for the interval specified in the product request’s `stats` parameter using the Price Type indexing. A value of -1 indicates no offer was available in the interval or insufficient data. ",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            2512,
+                            2582,
+                            -1,
+                            139,
+                            5499,
+                            -1,
+                            -1,
+                            4742,
+                            -1,
+                            -1,
+                            3755,
+                            5,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            48,
+                            45366,
+                            2512,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            1767,
+                            808,
+                            -1,
+                            -1,
+                            -1,
+                            -1
+                        ]
+                    },
+                    "avg30": {
+                        "description": "Same as avg, but for the last 30 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            2512,
+                            2582,
+                            -1,
+                            139,
+                            5499,
+                            -1,
+                            -1,
+                            4742,
+                            -1,
+                            -1,
+                            3755,
+                            5,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            48,
+                            45366,
+                            2512,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            1767,
+                            808,
+                            -1,
+                            -1,
+                            -1,
+                            -1
+                        ]
+                    },
+                    "avg90": {
+                        "description": "Same as avg, but for the last 90 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3425,
+                            3378,
+                            3127,
+                            241,
+                            5601,
+                            4298,
+                            -1,
+                            4859,
+                            -1,
+                            3102,
+                            4434,
+                            5,
+                            1,
+                            -1,
+                            0,
+                            -1,
+                            48,
+                            45694,
+                            3427,
+                            3286,
+                            3176,
+                            -1,
+                            2639,
+                            -1,
+                            4298,
+                            -1,
+                            -1,
+                            -1,
+                            1767,
+                            1284,
+                            -1,
+                            -1,
+                            3279,
+                            -1
+                        ]
+                    },
+                    "avg180": {
+                        "description": "Same as avg, but for the last 180 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3858,
+                            3769,
+                            3223,
+                            221,
+                            5800,
+                            4130,
+                            -1,
+                            5124,
+                            -1,
+                            3212,
+                            4638,
+                            7,
+                            1,
+                            -1,
+                            0,
+                            -1,
+                            48,
+                            45067,
+                            3858,
+                            3293,
+                            3184,
+                            3074,
+                            2639,
+                            -1,
+                            4162,
+                            2998,
+                            -1,
+                            -1,
+                            5078,
+                            1300,
+                            -1,
+                            -1,
+                            3276,
+                            3374
+                        ]
+                    },
+                    "avg365": {
+                        "description": "Same as avg, but for the last 365 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            4075,
+                            3991,
+                            3194,
+                            211,
+                            5813,
+                            3929,
+                            -1,
+                            5061,
+                            -1,
+                            3185,
+                            4584,
+                            9,
+                            1,
+                            -1,
+                            1,
+                            -1,
+                            48,
+                            43833,
+                            4074,
+                            3271,
+                            3132,
+                            3074,
+                            2639,
+                            -1,
+                            4248,
+                            3579,
+                            2857,
+                            -1,
+                            5899,
+                            1300,
+                            -1,
+                            -1,
+                            3269,
+                            3374
+                        ]
+                    },
+                    "atIntervalStart": {
+                        "description": "Contains prices registered at the start of the interval specified in the product request’s `stats` parameter using the Price Type indexing. A value of -1 indicates no offer was available in the interval or insufficient data.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            2549,
+                            2549,
+                            -1,
+                            96,
+                            5499,
+                            -1,
+                            -1,
+                            4999,
+                            -1,
+                            -1,
+                            4659,
+                            4,
+                            -1,
+                            -1,
+                            -1,
+                            4,
+                            48,
+                            47631,
+                            2549,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            1701,
+                            -1,
+                            -1,
+                            -1,
+                            -1
+                        ]
+                    },
+                    "min": {
+                        "description": "Contain the lowest prices ever registered for this product. The first dimension uses the Price Type indexing. The second dimension is either null (no data available for the price type) or an array of size 2 with the first value being the time of the extreme point (in `Keepa Time minutes`) and the second value being the respective extreme value.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "example": [
+                            [
+                                4709928,
+                                2100
+                            ],
+                            [
+                                3259414,
+                                1
+                            ],
+                            [
+                                5754116,
+                                1825
+                            ],
+                            [
+                                5182524,
+                                2
+                            ],
+                            [
+                                3651144,
+                                3750
+                            ],
+                            [
+                                3449544,
+                                799
+                            ],
+                            null,
+                            [
+                                3189672,
+                                1
+                            ],
+                            [
+                                3523616,
+                                2449
+                            ],
+                            [
+                                5735496,
+                                1650
+                            ],
+                            [
+                                6738682,
+                                2099
+                            ],
+                            [
+                                3543146,
+                                1
+                            ],
+                            [
+                                2338720,
+                                1
+                            ],
+                            [
+                                6539248,
+                                0
+                            ],
+                            [
+                                2412158,
+                                1
+                            ],
+                            null,
+                            [
+                                4647484,
+                                42
+                            ],
+                            [
+                                4647484,
+                                16
+                            ],
+                            [
+                                6738680,
+                                2099
+                            ],
+                            [
+                                4710276,
+                                1995
+                            ],
+                            [
+                                4710112,
+                                1932
+                            ],
+                            [
+                                4712932,
+                                1969
+                            ],
+                            [
+                                5799036,
+                                1702
+                            ],
+                            [
+                                3506622,
+                                1665
+                            ],
+                            [
+                                4837310,
+                                1799
+                            ],
+                            [
+                                3464492,
+                                2495
+                            ],
+                            [
+                                3526988,
+                                2399
+                            ],
+                            null,
+                            [
+                                3226628,
+                                460
+                            ],
+                            [
+                                7350370,
+                                219
+                            ],
+                            null,
+                            null,
+                            [
+                                6267992,
+                                2400
+                            ],
+                            [
+                                6718184,
+                                2564
+                            ]
+                        ]
+                    },
+                    "max": {
+                        "description": "Contain the highest prices ever registered for this product.The first dimension uses the Price Type indexing. The second dimension is either null (no data available for the price type) or an array of size 2 with the first value being the time of the extreme point (in `Keepa Time minutes`) and the second value being the respective extreme value.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "example": [
+                            [
+                                5633256,
+                                5299
+                            ],
+                            [
+                                3654504,
+                                9999
+                            ],
+                            [
+                                3778320,
+                                4476
+                            ],
+                            [
+                                2241840,
+                                66517
+                            ],
+                            [
+                                6609220,
+                                5999
+                            ],
+                            [
+                                2627856,
+                                11600
+                            ],
+                            null,
+                            [
+                                6247744,
+                                10489
+                            ],
+                            [
+                                6193860,
+                                3349
+                            ],
+                            [
+                                3779252,
+                                4476
+                            ],
+                            [
+                                4872696,
+                                8997
+                            ],
+                            [
+                                3088008,
+                                120
+                            ],
+                            [
+                                4846466,
+                                8
+                            ],
+                            [
+                                6539248,
+                                0
+                            ],
+                            [
+                                5459938,
+                                26
+                            ],
+                            null,
+                            [
+                                3464606,
+                                50
+                            ],
+                            [
+                                6882580,
+                                48772
+                            ],
+                            [
+                                6472404,
+                                7047
+                            ],
+                            [
+                                4249052,
+                                4322
+                            ],
+                            [
+                                3779252,
+                                4476
+                            ],
+                            [
+                                4249424,
+                                3881
+                            ],
+                            [
+                                4250884,
+                                3308
+                            ],
+                            [
+                                4870390,
+                                8573
+                            ],
+                            [
+                                3412840,
+                                11699
+                            ],
+                            [
+                                6004564,
+                                5500
+                            ],
+                            [
+                                6299472,
+                                5465
+                            ],
+                            null,
+                            [
+                                5230790,
+                                7439
+                            ],
+                            [
+                                3920522,
+                                13000
+                            ],
+                            null,
+                            null,
+                            [
+                                6604464,
+                                3907
+                            ],
+                            [
+                                6323572,
+                                4632
+                            ]
+                        ]
+                    },
+                    "minInInterval": {
+                        "description": "Same as min, but restricted to the interval specified in the product request’s `stats` parameter.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "example": [
+                            [
+                                7336466,
+                                2500
+                            ],
+                            [
+                                7336466,
+                                2500
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                7357514,
+                                2
+                            ],
+                            [
+                                7333196,
+                                5499
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7333900,
+                                4024
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                7341912,
+                                3318
+                            ],
+                            [
+                                7333460,
+                                1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7333196,
+                                48
+                            ],
+                            [
+                                7366960,
+                                34630
+                            ],
+                            [
+                                7336466,
+                                2500
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7365430,
+                                1599
+                            ],
+                            [
+                                7350370,
+                                219
+                            ],
+                            null,
+                            null,
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ]
+                        ]
+                    },
+                    "maxInInterval": {
+                        "description": "Same as max, but restricted to the interval specified in the product request’s `stats` parameter.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "example": [
+                            [
+                                7333288,
+                                2679
+                            ],
+                            [
+                                7333528,
+                                6412
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                7340398,
+                                516
+                            ],
+                            [
+                                7333196,
+                                5499
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7344566,
+                                5499
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                7333528,
+                                6412
+                            ],
+                            [
+                                7347928,
+                                9
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7333196,
+                                48
+                            ],
+                            [
+                                7366424,
+                                47813
+                            ],
+                            [
+                                7333288,
+                                2679
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ],
+                            null,
+                            [
+                                7335054,
+                                1999
+                            ],
+                            [
+                                7333196,
+                                1701
+                            ],
+                            null,
+                            null,
+                            [
+                                -1,
+                                -1
+                            ],
+                            [
+                                -1,
+                                -1
+                            ]
+                        ]
+                    },
+                    "outOfStockPercentageInInterval": {
+                        "description": "Contains the out-of-stock percentage in the interval specified in the product request’s `stats` parameter using the Price Type indexing. A value of -1 indicates insufficient data or the Price Type is not a price. \n\nExamples: \n\n0: Never out of stock, \n\n100: Out of stock 100% of the time, \n\n25: Out of stock 25% of the time.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3,
+                            1,
+                            100,
+                            -1,
+                            1,
+                            100,
+                            -1,
+                            6,
+                            100,
+                            100,
+                            10,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            3,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            -1,
+                            25,
+                            0,
+                            -1,
+                            -1,
+                            100,
+                            100
+                        ]
+                    },
+                    "outOfStockPercentage30": {
+                        "description": "Contains the 30-day out-of-stock percentage using the Price Type indexing. A value of -1 indicates insufficient data or the Price Type is not a price.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3,
+                            1,
+                            100,
+                            -1,
+                            1,
+                            100,
+                            -1,
+                            6,
+                            100,
+                            100,
+                            10,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            3,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            100,
+                            -1,
+                            25,
+                            0,
+                            -1,
+                            -1,
+                            100,
+                            100
+                        ]
+                    },
+                    "outOfStockPercentage90": {
+                        "description": "Same as outOfStockPercentage30, but for the last 90 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            2,
+                            1,
+                            92,
+                            -1,
+                            1,
+                            84,
+                            -1,
+                            3,
+                            100,
+                            93,
+                            41,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            3,
+                            96,
+                            97,
+                            100,
+                            99,
+                            100,
+                            84,
+                            100,
+                            100,
+                            -1,
+                            75,
+                            3,
+                            -1,
+                            -1,
+                            97,
+                            100
+                        ]
+                    },
+                    "outOfStockPercentage180": {
+                        "description": "Same as outOfStockPercentage30, but for the last 180 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            1,
+                            87,
+                            -1,
+                            1,
+                            90,
+                            -1,
+                            2,
+                            100,
+                            89,
+                            21,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            2,
+                            91,
+                            97,
+                            100,
+                            100,
+                            100,
+                            91,
+                            100,
+                            100,
+                            -1,
+                            61,
+                            44,
+                            -1,
+                            -1,
+                            93,
+                            98
+                        ]
+                    },
+                    "outOfStockPercentage365": {
+                        "description": "Same as outOfStockPercentage30, but for the last 365 days.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            1,
+                            82,
+                            -1,
+                            1,
+                            87,
+                            -1,
+                            2,
+                            100,
+                            84,
+                            11,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            -1,
+                            1,
+                            88,
+                            95,
+                            100,
+                            99,
+                            100,
+                            88,
+                            100,
+                            100,
+                            -1,
+                            59,
+                            73,
+                            -1,
+                            -1,
+                            89,
+                            99
+                        ]
+                    },
+                    "salesRankDrops30": {
+                        "description": "The count of sales rank drops (from high to low value) within the last 30 days, considered to indicate sales.",
+                        "type": "integer",
+                        "example": 115
+                    },
+                    "salesRankDrops90": {
+                        "description": "Same as salesRankDrops30, but for the last 90 days.",
+                        "type": "integer",
+                        "example": 427
+                    },
+                    "salesRankDrops180": {
+                        "description": "Same as salesRankDrops30, but for the last 180 days.",
+                        "type": "integer",
+                        "example": 935
+                    },
+                    "lastOffersUpdate": {
+                        "description": "The last time the offers information was updated (in `Keepa Time minutes`).",
+                        "type": "integer",
+                        "example": 7376384
+                    },
+                    "totalOfferCount": {
+                        "description": "The total count of offers for this product (all conditions combined). The offer count per condition can be found in the `current` field.",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "lightningDealInfo": {
+                        "description": "Used to identify a past, upcoming, or current lightning deal offer. The format is `[startDate, endDate]` (always an array of length 2 if not null). It is null if the product never had a lightning deal. Both timestamps are in UTC and `Keepa Time minutes`. If there is an upcoming lightning deal, only startDate is set (with endDate having a value of -1). If there is a current lightning deal, both startDate and endDate will be set, with startDate older than the current time and endDate in the future. If there is only a past deal, both startDate and endDate will be set in the past.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            6586980,
+                            6589860
+                        ]
+                    },
+                    "lastBuyBoxUpdate": {
+                        "description": "Timestamp of the last buy box update, in KeepaTime.",
+                        "type": "integer",
+                        "example": 7376384
+                    },
+                    "buyBoxSellerId": {
+                        "description": "The seller ID of the buy box offer, if it exists. Otherwise, \"-1\", \"-2\", or null.",
+                        "type": "string",
+                        "example": "ATVPDKIKX0DER"
+                    },
+                    "buyBoxPrice": {
+                        "description": "The buy box new price, if it exists. Otherwise, -1 or -2.",
+                        "type": "integer",
+                        "example": 2500
+                    },
+                    "buyBoxShipping": {
+                        "description": "The buy box new shipping cost, if it exists. Otherwise, -1 or -2.",
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "buyBoxIsUnqualified": {
+                        "description": "Indicates whether a seller won the buy box. If only sellers with poor offers are available, none qualifies for the buy box.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "buyBoxIsShippable": {
+                        "description": "Indicates whether the buy box is listed as being shippable.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "buyBoxIsPreorder": {
+                        "description": "Indicates if the buy box is a pre-order.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "buyBoxIsBackorder": {
+                        "description": "Indicates if the buy box is back-ordered.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "buyBoxIsFBA": {
+                        "description": "Indicates whether the buy box is fulfilled by Amazon.",
+                        "type": "boolean"
+                    },
+                    "buyBoxIsAmazon": {
+                        "description": "Indicates if Amazon is the seller in the buy box.",
+                        "type": "boolean"
+                    },
+                    "buyBoxIsMAP": {
+                        "description": "Indicates if the buy box new price is hidden on Amazon due to MAP (Minimum Advertised Price) restrictions.",
+                        "type": "boolean"
+                    },
+                    "buyBoxMinOrderQuantity": {
+                        "description": "The minimum order quantity of the buy box. -1 if not available, 0 if no limit exists.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "buyBoxMaxOrderQuantity": {
+                        "description": "The maximum order quantity of the buy box. -1 if not available, 0 if no limit exists.",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "buyBoxAvailabilityMessage": {
+                        "description": "The availability message of the buy box. null if not available",
+                        "type": "string",
+                        "example": "In Stock."
+                    },
+                    "buyBoxShippingCountry": {
+                        "description": "The default shipping country of the buy box seller. null if not available or if the seller is Amazon",
+                        "type": "string",
+                        "example": "US"
+                    },
+                    "buyBoxIsPrimeExclusive": {
+                        "description": "Indicates if the buy box is Prime exclusive. null if not available.",
+                        "type": "boolean"
+                    },
+                    "buyBoxIsPrimeEligible": {
+                        "description": "Indicates if the buy box is Prime eligible. null if not available.",
+                        "type": "boolean"
+                    },
+                    "buyBoxIsPrimePantry": {
+                        "description": "Indicates if the buy box is a Prime Pantry offer. null if not available.",
+                        "type": "boolean"
+                    },
+                    "buyBoxStats": {
+                        "description": "Contains buy box statistics for the specified interval. Each key represents the sellerId of the buy box seller, and each value is an object with statistics.",
+                        "type": "object",
+                        "example": {
+                            "ATVPDKIKX0DER": {
+                                "percentageWon": 97.09722,
+                                "avgPrice": 2512,
+                                "avgNewOfferCount": 1,
+                                "avgUsedOfferCount": -1,
+                                "isFBA": true,
+                                "lastSeen": 7376396
+                            }
+                        },
+                        "additionalProperties": {
+                            "properties": {
+                                "avgNewOfferCount": {
+                                    "description": "Average \"New\" offer count during the time the seller held the Buy Box",
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "avgPrice": {
+                                    "description": "Average price of the Buy Box offer from this seller",
+                                    "type": "integer",
+                                    "example": 2512
+                                },
+                                "isFBA": {
+                                    "description": "Whether this offer is fulfilled by Amazon",
+                                    "type": "boolean"
+                                },
+                                "lastSeen": {
+                                    "description": "Last time the seller won the buy box (`Keepa Time minutes`)",
+                                    "type": "integer",
+                                    "example": 7376396
+                                },
+                                "percentageWon": {
+                                    "description": "Percentage of time the seller won the buy box",
+                                    "type": "number",
+                                    "example": 97.09722
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "buyBoxUsedStats": {
+                        "description": "Contains used buy box statistics for the specified interval. The format is the same as buyBoxStats.",
+                        "type": "object"
+                    },
+                    "buyBoxUsedPrice": {
+                        "description": "The buy box used price, if available. Otherwise, -1 or null.",
+                        "type": "integer"
+                    },
+                    "buyBoxUsedShipping": {
+                        "description": "The buy box used shipping cost, if available. Otherwise, -1 or null.",
+                        "type": "integer"
+                    },
+                    "buyBoxUsedSellerId": {
+                        "description": "The seller ID of the used buy box offer, if available. Otherwise, null.",
+                        "type": "string",
+                        "example": "A2FP3WC79CXYXU"
+                    },
+                    "buyBoxUsedIsFBA": {
+                        "description": "Indicates whether the used buy box is fulfilled by Amazon.",
+                        "type": "boolean"
+                    },
+                    "buyBoxUsedCondition": {
+                        "description": "The offer sub-condition of the used buy box. \n\nValue: \n\n2 - Used - Like New, \n\n3 - Used - Very Good, \n\n4 - Used - Good, \n\n5 - Used - Acceptable.",
+                        "type": "integer"
+                    },
+                    "retrievedOfferCount": {
+                        "description": "The count of retrieved offers for this request.",
+                        "type": "integer",
+                        "example": -2
+                    },
+                    "isAddonItem": {
+                        "description": "Indicates whether the product is an add-on item (ships with orders that include $25 or more of items shipped by Amazon).",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "sellerIdsLowestFBA": {
+                        "description": "Contains the seller IDs (if any) of the lowest-priced live new FBA offers. Multiple entries exist if multiple offers share the same price.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "A2FP3WC79CXYXU"
+                        ]
+                    },
+                    "sellerIdsLowestFBM": {
+                        "description": "Contains the seller IDs (if any) of the lowest-priced live new FBM offers. Multiple entries exist if multiple offers share the same price.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "A1TSKR6QH55IJL"
+                        ]
+                    },
+                    "offerCountFBA": {
+                        "description": "The count of retrieved live new FBA offers, if available. Otherwise, -2.",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "offerCountFBM": {
+                        "description": "The count of retrieved live new FBM offers, if available. Otherwise, -2.",
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "stockAmazon": {
+                        "description": "The stock of the Amazon offer, if available. Otherwise, undefined.",
+                        "type": "integer"
+                    },
+                    "stockBuyBox": {
+                        "description": "The stock of the buy box offer, if available. Otherwise, undefined.",
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "KeepaProductCsv": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "example": [
+                    [
+                        7345328,
+                        2500
+                    ],
+                    [
+                        7345328,
+                        2500
+                    ],
+                    [
+                        7303544,
+                        -1
+                    ],
+                    [
+                        7371626,
+                        29,
+                        7372008,
+                        30,
+                        7372414,
+                        31,
+                        7372518,
+                        35
+                    ],
+                    [
+                        7339416,
+                        5499
+                    ],
+                    [
+                        7286744,
+                        -1
+                    ],
+                    null,
+                    [
+                        7362962,
+                        4647,
+                        0
+                    ],
+                    [
+                        6589860,
+                        -1
+                    ],
+                    [
+                        7303544,
+                        -1
+                    ],
+                    [
+                        7371726,
+                        4936,
+                        7374028,
+                        4931
+                    ],
+                    [
+                        7371574,
+                        7
+                    ],
+                    [
+                        7303544,
+                        -1
+                    ],
+                    [
+                        6539280,
+                        -1
+                    ],
+                    [
+                        7286744,
+                        -1
+                    ],
+                    [
+                        7371726,
+                        7,
+                        7371828,
+                        7,
+                        7372108,
+                        7,
+                        7372314,
+                        7
+                    ],
+                    [
+                        7291578,
+                        48
+                    ],
+                    [
+                        7371112,
+                        37306,
+                        7372020,
+                        37307,
+                        7372108,
+                        37310
+                    ],
+                    [
+                        7345328,
+                        2500,
+                        0
+                    ],
+                    [
+                        7303544,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7254502,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7155406,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7280358,
+                        -1,
+                        -1
+                    ],
+                    [
+                        6832704,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7286744,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7216200,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7081318,
+                        -1,
+                        -1
+                    ],
+                    null,
+                    [
+                        7365430,
+                        1599,
+                        0
+                    ],
+                    [
+                        7350370,
+                        159,
+                        60
+                    ],
+                    null,
+                    null,
+                    [
+                        7303544,
+                        -1,
+                        -1
+                    ],
+                    [
+                        7245096,
+                        -1
+                    ]
+                ]
+            },
+            "KeepaProductOffer": {
+                "properties": {
+                    "offerId": {
+                        "description": "Unique ID of this offer (in the scope of the product). Not related to the offerIds used by Amazon, as those are user-specific and valid only for a short time. The offerId can be used to identify the same offers throughout requests.",
+                        "type": "integer",
+                        "example": 553
+                    },
+                    "lastSeen": {
+                        "description": "Indicates the last time Keepa have seen (and updated) this offer, in `Keepa Time minutes`. If you are only interested in live offers, use this field to verify that the offer is current.",
+                        "type": "integer",
+                        "example": 7376384
+                    },
+                    "sellerId": {
+                        "description": "The seller ID of the merchant.",
+                        "type": "string",
+                        "example": "A2FP3WC79CXYXU"
+                    },
+                    "isPrime": {
+                        "description": "Whether or not this offer is available via Prime shipping. Keepa is unable to reliably identify SFP - Seller Fulfilled Prime.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "isFBA": {
+                        "description": "Whether or not this offer is fulfilled by Amazon.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "isMAP": {
+                        "description": "If the price of this offer is hidden on Amazon due to a MAP (“minimum advertised price”) restriction. Even if so, the offer object will contain the price and shipping costs.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isShippable": {
+                        "description": "Boolean value indicating whether or not the offer is currently shippable. If not, this could mean, for example, that it is temporarily out of stock or a pre-order.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "isAddonItem": {
+                        "description": "Indicating whether or not the offer is an Add-on item.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isPreorder": {
+                        "description": "Indicating whether or not the offer is a pre-order.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isWarehouseDeal": {
+                        "description": "Indicating whether or not the offer is a Warehouse Deal.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isScam": {
+                        "description": "Boolean value indicating whether or not Keepa system identified that the offering merchant attempts to scam users.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "shipsFromChina": {
+                        "description": "Boolean value indicating whether or not this offer’s seller default shipping location is China. This does not apply to FBA offers.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isAmazon": {
+                        "description": "True if the seller is Amazon (e.g. “Amazon.com”). Note: Amazon’s Warehouse Deals seller account or other accounts Amazon is maintaining under a different name are not considered to be Amazon.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isPrimeExcl": {
+                        "description": "This offer has a discounted Prime exclusive price.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "coupon": {
+                        "description": "Contains one-time coupon details of this offer. Undefined if none is available. Positive integer for an absolute discount or negative for a percentage discount. \n\n500 - Coupon with a $5 discount. \n\n-15 - Coupon with a 15% discount.",
+                        "type": "integer",
+                        "example": 500
+                    },
+                    "couponHistory": {
+                        "description": "Contains the coupon history of this offer, if available. It has the format `Keepa time minutes, coupon, […]`.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            6872588,
+                            0
+                        ]
+                    },
+                    "condition": {
+                        "description": "The condition of the offered product. Integer value: \n\n0 - Unknown, \n\n1 - New, \n\n2 - Used - Like New, \n\n3 - Used - Very Good, \n\n4 - Used - Good, \n\n5 - Used - Acceptable, \n\n6 - Refurbished, \n\n7 - Collectible - Like New, \n\n8 - Collectible - Very Good, \n\n9 - Collectible - Good, \n\n10 - Collectible - Acceptable, \n\n11 - Rental. \n\nNote: Open Box conditions are coded as Used conditions.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "conditionComment": {
+                        "description": "The describing text of the condition.",
+                        "type": "string",
+                        "example": "The item may come repackaged. Small cosmetic imperfection on top, […]"
+                    },
+                    "offerCSV": {
+                        "description": "Contains the current price and shipping costs of the offer as well as, if available, the offer’s history. It has the format `Keepa time minutes, price, shipping cost, […]`. \n\nThe price and shipping cost are integers of the respective Amazon locale’s smallest currency unit (e.g. euro cents or yen). \n\nIf Keepa were unable to determine the price or shipping cost, they have the value -2. \n\nFree shipping has the shipping cost of 0. \n\nIf an offer is not shippable or has unspecified shipping costs, the shipping cost will be -1. \n\nTo get the newest price and shipping cost, access the last two entries of the array. \n\nMost recent price: `offerCSV[offerCSV.length - 2]` \n\nMost recent shipping cost: `offerCSV[offerCSV.length - 1]`",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            7371726,
+                            4999,
+                            0,
+                            7376384,
+                            3367,
+                            0
+                        ]
+                    },
+                    "stockCSV": {
+                        "description": "The stock history for this offer, provided the stock product request parameter was utilized. This data represents Keepa best attempt to determine the available stock quantity for this offer, though it may not always be accurate, such as in instances where per-customer limits apply. Stock data availability is not guaranteed. undefined if unavailable. It has the format `Keepa time minutes, stock, […]`.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            7371494,
+                            1,
+                            7376140,
+                            2
+                        ]
+                    },
+                    "primeExclCSV": {
+                        "description": "Contains the Prime exclusive price history of this offer, if available. A Prime exclusive offer can only be ordered if the buyer has an active Prime subscription. It has the format `Keepa time minutes, price, […]`.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "KeepaProduct": {
+                "properties": {
+                    "productType": {
+                        "description": "Must always be evaluated first. Determines what data for the product is available. Possible values: \n\n0 - STANDARD: Everything accessible \n\n1 - DOWNLOADABLE: No marketplace offers data \n\n2 - EBOOK: No marketplace offers data \n\n3 - INACCESSIBLE: No price, rating and offers data accessible. Sales rank and offer count data is updated less frequently. Some fields may be missing. \n\n4 - INVALID: No current data available due to invalid or deprecated ASIN, or other issues. Might be temporary. \n\n5 - VARIATION_PARENT: Product is a parent ASIN. variations is set.",
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "asin": {
+                        "description": "The ASIN of the product.",
+                        "type": "string",
+                        "example": "B00U26V4VQ"
+                    },
+                    "domainId": {
+                        "description": "The domainId of the product’s Amazon locale. Possible values: [ 1: com | 2: co.uk | 3: de | 4: fr | 5: co.jp | 6: ca | 8: it | 9: es | 10: in | 11: com.mx ]",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "description": "Title of the product. Caution: may contain unescaped HTML markup in rare cases.",
+                        "type": "string",
+                        "example": "CATAN Board Game - Embark on a Journey of Discovery and Trade! Civilization Building Strategy Game, Family Game for Kids & Adults, Ages 10+, 3-4 Players, 60-90 Minute Playtime, Made by CATAN Studio"
+                    },
+                    "trackingSince": {
+                        "description": "States the time Keepa have started tracking this product, in `Keepa Time minutes`.",
+                        "type": "integer",
+                        "example": 2240940
+                    },
+                    "listedSince": {
+                        "description": "States the time the item was first listed on Amazon, in `Keepa Time minutes`. This timestamp is only available for some products. If not available, the field has the value 0 or -1.",
+                        "type": "integer",
+                        "example": 346862
+                    },
+                    "lastUpdate": {
+                        "description": "States the last time Keepa have updated the information for this product, in `Keepa Time minutes`.",
+                        "type": "integer",
+                        "example": 7376140
+                    },
+                    "lastRatingUpdate": {
+                        "description": "States the last time Keepa have updated the product rating and review count, in `Keepa Time minutes`.",
+                        "type": "integer",
+                        "example": 7376140
+                    },
+                    "lastPriceChange": {
+                        "description": "States the last time Keepa have registered a price change (any price type), in `Keepa Time minutes`.",
+                        "type": "integer",
+                        "example": 7374028
+                    },
+                    "lastEbayUpdate": {
+                        "description": "States the last time Keepa have updated the eBay prices for this product, in `Keepa Time minutes`. If no matching products were found, the integer is negative.",
+                        "type": "integer",
+                        "example": 7374894
+                    },
+                    "lastStockUpdate": {
+                        "description": "The most recent update of the stock data for this product’s offers, in `Keepa Time minutes`. This field is undefined unless the stock parameter was used and stock data was collected at least once.",
+                        "type": "integer",
+                        "example": 7349428
+                    },
+                    "imagesCSV": {
+                        "description": "CSV list of Amazon image names of the product. null if not available. Note that the variant images (all images after the primary/first one) are not necessarily in the same order as on Amazon.",
+                        "type": "string",
+                        "example": "81zZW70yiYL.jpg,81SkwdTQypL.jpg,916rkTg6h0L.jpg,81tqU4Hr-fL.jpg,91iOb49w2fL.jpg,81rSEZZBGzL.jpg,81cnasxCU0L.jpg,51Czq2ni9IL.jpg"
+                    },
+                    "rootCategory": {
+                        "description": "Category node ID of the product’s root category. 0 if no root category known. The ID 9223372036854775807 (max signed long value) denotes a blank category with the name “?”. Keepa use this in cases where a product is listed in no or non-existent categories.",
+                        "type": "integer",
+                        "example": 165793011
+                    },
+                    "categories": {
+                        "description": "Array of Amazon category node IDs this product is listed in. Can be empty.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            166225011,
+                            19520348011,
+                            21394470011,
+                            19419995011,
+                            9765225011,
+                            24996084011,
+                            14052186011,
+                            119186712011,
+                            23717031011,
+                            24417464011,
+                            11308668011,
+                            23946859011,
+                            13443194011,
+                            19419985011
+                        ]
+                    },
+                    "categoryTree": {
+                        "description": "Represents the category tree as an ordered array of objects, each consisting of two fields: catId - Long - the category ID, name - String - the name of the category",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "catId": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "catId": 165793011,
+                                "name": "Toys & Games"
+                            },
+                            {
+                                "catId": 166220011,
+                                "name": "Games & Accessories"
+                            },
+                            {
+                                "catId": 166225011,
+                                "name": "Board Games"
+                            }
+                        ]
+                    },
+                    "parentAsin": {
+                        "description": "The ASIN of the parent product (if the product has variations, otherwise null).",
+                        "type": "string",
+                        "example": "B00M0QVG3W"
+                    },
+                    "parentAsinHistory": {
+                        "description": "The history of the parentAsin field. This array has the format: [keepaTime, previous parent ASIN, …]. The timestamp indicates when the previously associated parentAsin ceased to be valid. For the current parent ASIN, use the parentAsin field. undefined if the parentAsin field never changed. Keepa started tracking parentAsin changes on March 18th 2024.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "7367094",
+                            "B0CTP7MWMF"
+                        ]
+                    },
+                    "variations": {
+                        "description": "Contains the variations of this product. Each object in the array represents a single variation. A variation object consists of the variation ASIN and an attributes array, where each entry represents one variation theme, including a dimension and its corresponding value. To request live data for this field, the offers parameter must be used.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "asin": {
+                                    "type": "string"
+                                },
+                                "attributes": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "dimension": {
+                                                "type": "string"
+                                            },
+                                            "value": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "asin": "B07GFPNJL9",
+                                "attributes": [
+                                    {
+                                        "dimension": "Size",
+                                        "value": "7.24 LB"
+                                    },
+                                    {
+                                        "dimension": "FlavorName",
+                                        "value": "Cheddar"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "frequentlyBoughtTogether": {
+                        "description": "One or two “Frequently Bought Together” ASINs. null if not available.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "B00U26V9CU",
+                            "B00U26V4S4"
+                        ]
+                    },
+                    "upcList": {
+                        "description": "A list of UPCs assigned to this product. The first index is the primary UPC. null if not available.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "029877030712"
+                        ]
+                    },
+                    "eanList": {
+                        "description": "A list of EANs assigned to this product. The first index is the primary EAN. null if not available.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "0029877030712"
+                        ]
+                    },
+                    "manufacturer": {
+                        "description": "Name of the manufacturer. null if not available.",
+                        "type": "string",
+                        "example": "Asmodee"
+                    },
+                    "brand": {
+                        "description": "An item’s brand. null if not available.",
+                        "type": "string",
+                        "example": "Catan"
+                    },
+                    "productGroup": {
+                        "description": "The item’s productGroup. null if not available.",
+                        "type": "string",
+                        "example": "Toy"
+                    },
+                    "type": {
+                        "description": "The item’s productType. null if not available.",
+                        "type": "string",
+                        "example": "BOARD_GAME"
+                    },
+                    "partNumber": {
+                        "description": "The item’s partNumber. null if not available.",
+                        "type": "string",
+                        "example": "CN3071"
+                    },
+                    "binding": {
+                        "description": "The item’s binding. null if not available. If the item is not a book, it is usually the product category instead.",
+                        "type": "string",
+                        "example": "Board Game"
+                    },
+                    "numberOfItems": {
+                        "description": "The number of items of this product. -1 if not available.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "numberOfPages": {
+                        "description": "The number of pages of this product. -1 if not available.",
+                        "type": "integer",
+                        "example": 514
+                    },
+                    "publicationDate": {
+                        "description": "The item’s publication date in one of the following three formats: YYYY or YYYYMM or YYYYMMDD (Y = year, M = month, D = day). -1 if not available.",
+                        "type": "integer",
+                        "example": 20150409
+                    },
+                    "releaseDate": {
+                        "description": "The item’s release date. Same format as publicationDate. -1 if not available.",
+                        "type": "integer",
+                        "example": 20150423
+                    },
+                    "contributors": {
+                        "description": "The contributors of the item. A contributor can be an author, actor, director, etc. Each contributor entry has a name and a role type.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            [
+                                "Vin Diesel",
+                                "actor"
+                            ]
+                        ]
+                    },
+                    "languages": {
+                        "description": "An item can have one or more languages. Each language entry has a name and most also have a type. null if not available.",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": [
+                            [
+                                "English"
+                            ],
+                            [
+                                "English",
+                                "Original Language"
+                            ]
+                        ]
+                    },
+                    "model": {
+                        "description": "The item’s model. null if not available.",
+                        "type": "string",
+                        "example": "CN3071"
+                    },
+                    "color": {
+                        "description": "The item’s color. null if not available.",
+                        "type": "string",
+                        "example": "Multicolor"
+                    },
+                    "size": {
+                        "description": "The item’s size. null if not available.",
+                        "type": "string",
+                        "example": "One Size"
+                    },
+                    "edition": {
+                        "description": "The item’s edition. null if not available.",
+                        "type": "string",
+                        "example": "Standard Edition"
+                    },
+                    "format": {
+                        "description": "The item’s format. null if not available.",
+                        "type": "string",
+                        "example": "AC-3"
+                    },
+                    "features": {
+                        "description": "A list of up to 5 product features / bullet points. null if not available. An entry can contain HTML markup in rare cases. Keepa currently limit each entry to a maximum of 1000 characters (if the feature is longer it will be cut off). This limitation may change in the future without prior notice.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "EXPLORE CATAN: Set sail to the uncharted island of Catan and compete with other settlers to establish supremacy.",
+                            "RESOURCE MANAGEMENT: Strategically gather and trade resources like ore, brick, lumber, grain, and wool to expand your settlements.",
+                            "BUILD AND UPGRADE: Use your resources to build roads, settlements, and cities to earn victory points.",
+                            "DYNAMIC GAMEPLAY: Roll the dice to collect resources based on terrain hexes, and employ clever tactics to outmaneuver your opponents.",
+                            "CLASSIC GAME: Celebrate the 25th anniversary of CATAN, a timeless strategy board game loved by players worldwide."
+                        ]
+                    },
+                    "description": {
+                        "description": "A description of the product. null if not available. May contain HTML markup and newlines. Keepa limit the product description to a maximum of 4000 characters (if the description is longer it will be cut off). This limitation may change in the future without prior notice. To request live data for this field the offers parameter must be used.",
+                        "type": "string",
+                        "example": "Your adventurous settlers seek to tame the remote but rich isle of Catan. Start by revealing Catan's many harbors and regions: pastures, fields, mountains, hills, forests, and desert. The random mix creates a different board virtually every game. Guide your settlers to victory by clever trading and cunning development. Use resource combinations- grain, wool, ore, brick, and lumber-to buy handy development cards and build roads, settlements, and cities. Acquire your resources through trades,cards, or lucky dice (even outside your turn). But beware! Someone might cut off your road or buy a monopoly. And you never know when the wily robber might steal some of your precious gains! Catan((aka The Settlers of Catan) has been awarded with \"Game of the Year,\" \"Hall of Fame,\" and even \"Game of the Century\" honors in Germany, the United States, and a host of other countries worldwide. An international favorite, it's been called the \"Perfect Social Game.\" Catan contains: 19 unique hexagonal terrain tile, 6 coastal frame pieces, 9 extra harbor pieces, 20 wooden settlements, 16 wooden cities, 60 wooden roads, 95 resource cards, 25 development cards, 4 building costs cards, 2 special bonus cards, 18 number tokens, 2 six-sided dice, 1 wooden robber pawn, simple rules & almanac."
+                    },
+                    "hazardousMaterials": {
+                        "description": "The hazardous material types of the product. undefined if not available. Each entry consists of two fields: aspect - String, value - String.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "aspect": {
+                                    "type": "string",
+                                    "example": "proper_shipping_name"
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "example": "AEROSOLS"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "packageHeight": {
+                        "description": "The package’s height in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 81
+                    },
+                    "packageLength": {
+                        "description": "The package’s length in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 296
+                    },
+                    "packageWidth": {
+                        "description": "The package’s width in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 240
+                    },
+                    "packageWeight": {
+                        "description": "The package’s weight in grams. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 1222
+                    },
+                    "packageQuantity": {
+                        "description": "Quantity of items in the package. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "itemHeight": {
+                        "description": "The item’s height in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 84
+                    },
+                    "itemLength": {
+                        "description": "The item’s length in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 300
+                    },
+                    "itemWidth": {
+                        "description": "The item’s width in millimeters. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 241
+                    },
+                    "itemWeight": {
+                        "description": "The item’s weight in grams. 0 or -1 if not available.",
+                        "type": "integer",
+                        "example": 907
+                    },
+                    "availabilityAmazon": {
+                        "description": "Availability of the Amazon offer. Possible values: \n\n-1: no Amazon offer exists, \n\n0: Amazon offer is in stock and shippable, \n\n1: Amazon offer is currently not in stock, but will be in the future (pre-order), \n\n2: Amazon offer availability is “unknown”, \n\n3: Amazon offer is currently not in stock, but will be in the future (back-order), \n\n4: Amazon offer shipping is delayed - see “availabilityAmazonDelay” for more details.",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "availabilityAmazonDelay": {
+                        "description": "If availabilityAmazon has the value 4, this field will provide the delay interval in hours. null if no data is available.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            0,
+                            0
+                        ]
+                    },
+                    "buyBoxEligibleOfferCounts": {
+                        "description": "If buyBoxEligibleOfferCounts is available, it represents an array of integers, each entry indicating the total number of offers eligible for the Buy Box across specified offer conditions and fulfillment channels. This array contains eight elements, indexed as follows: \n\n0: New FBA, \n\n1: New FBM, \n\n2: Used FBA, \n\n3: Used FBM, \n\n4: Collectible FBA, \n\n5: Collectible FBM, \n\n6: Refurbished FBA, \n\n7: Refurbished FBM.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3,
+                            2,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    "competitivePriceThreshold": {
+                        "description": "The competitivePriceThreshold field is a price based on competitive prices from other retailers (excluding other Amazon sellers). The offer may be ineligible for the Buy Box if the seller’s price + shipping is greater than this competitive price. Undefined if it has no value.",
+                        "type": "integer",
+                        "example": 2500
+                    },
+                    "suggestedLowerPrice": {
+                        "description": "The suggested lower price of the item, including shipping. The suggested lower price is based on a range of factors, including historical selling prices, recent Buy Box-eligible prices, and input from customers. Undefined if it has no value.",
+                        "type": "integer"
+                    },
+                    "ebayListingIds": {
+                        "description": "Contains the lowest priced matching eBay listing Ids. Always contains two entries, the first one is the listing id of the lowest priced listing in new condition, the second in used condition. null or 0 if not available.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            710151859,
+                            325289877142
+                        ]
+                    },
+                    "isAdultProduct": {
+                        "description": "Indicates if the item is considered to be for adults only.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isHeatSensitive": {
+                        "description": "Indicates if the item is heat sensitive (e.g. meltable).",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isMerchOnDemand": {
+                        "description": "True if this product is an Amazon Merch on Demand product. undefined otherwise.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "isHaul": {
+                        "description": "True if this product is an Amazon Haul product. undefined otherwise. Only basic product information is available for Amazon Haul products.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "ingredients": {
+                        "description": "The ingredient list of the product. undefined if not available.",
+                        "type": "string",
+                        "example": "Purified Carbonated Water, Natural Flavors"
+                    },
+                    "launchpad": {
+                        "description": "Indicates if the item is listed in the launchpad category. If so, the `salesRankReference` will not be available.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "audienceRating": {
+                        "description": "Audience rating. The rating suggests the age for which the media is appropriate.",
+                        "type": "string",
+                        "example": "PG-13 (Parents Strongly Cautioned)"
+                    },
+                    "urlSlug": {
+                        "description": "The product listing URL slug.",
+                        "type": "string",
+                        "example": "CATAN-Board-Game-Discovery-Civilization"
+                    },
+                    "returnRate": {
+                        "description": "This field provides information about the customer return rate for a product. The possible values are: \n\nnull: The return rate is either unavailable or considered average. \n\n1: The product has a low return rate. \n\n2: The product has a high return rate.",
+                        "type": "integer"
+                    },
+                    "newPriceIsMAP": {
+                        "description": "Whether or not the lowest new price (either price type AMAZON or NEW) is restricted by MAP (Minimum Advertised Price). Use this to differentiate out of stock (price = -1) vs. MAP restriction.",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "isEligibleForTradeIn": {
+                        "description": "Whether or not the product is eligible for trade-in.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isEligibleForSuperSaverShipping": {
+                        "description": "Whether or not the product’s buy box is eligible for free shipping.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "fbaFees": {
+                        "properties": {
+                            "pickAndPackFee": {
+                                "description": "The FBA pick & pack fees of this product. The pickAndPackFee is determined by either the current price or, in the absence of a current offer, the previous one. If neither of these prices is available for reference, the fee percent is calculated based on a standard sales price of 100.00. Fees are integers of the respective Amazon locale’s smallest currency unit (e.g. euro cents or yen). null if not available.",
+                                "type": "integer",
+                                "example": 661
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "variableClosingFee": {
+                        "description": "The variable closing fee. Fees are integers of the respective Amazon locale’s smallest currency unit (e.g. euro cents or yen). Undefined if it has no value.",
+                        "type": "integer",
+                        "example": 81
+                    },
+                    "referralFeePercentage": {
+                        "description": "The Amazon seller referral fee percent is determined by either the current price or, in the absence of a current offer, the previous one. If neither of these prices is available for reference, the fee percent is calculated based on a standard sales price of 100.00. null if not available.",
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "coupon": {
+                        "description": "Contains coupon details for the buy box offer of the product, if available. null if not available. An integer array with two entries: \n\nThe first entry is the discount for a one-time coupon. \n\nThe second entry is a subscribe and save coupon. \n\nEntry value is either 0 if no coupon of that type is offered, positive for an absolute discount, or negative for a percentage discount. The coupons field is always accessible, but only updated if the offers parameter was used in the Product Request.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            200,
+                            -15
+                        ]
+                    },
+                    "couponHistory": {
+                        "description": "Contains historical values for the coupon field, if available. null if not available. Keepa started tracking coupon history on June 15th 2024. Format: `[ keepaTime, one-time coupon, subscribe and save coupon, keepaTime, … ]`",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            7339566,
+                            461,
+                            0,
+                            7340010,
+                            0,
+                            0,
+                            7356384,
+                            625,
+                            0
+                        ]
+                    },
+                    "promotions": {
+                        "description": "Contains an array of active promotions. Not all product promotions can be provided. A promotion object consists of: type - String - The type of promotion, amount - Integer - The discounted price, discountPercent - Integer - The discount percent.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "type": {
+                                    "description": "The type of promotion",
+                                    "type": "string",
+                                    "example": "SNS"
+                                },
+                                "amount": {
+                                    "description": "The discounted price",
+                                    "type": "integer",
+                                    "example": 100
+                                },
+                                "discountPercent": {
+                                    "description": "The discount percent",
+                                    "type": "integer",
+                                    "example": 10
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "unitCount": {
+                        "description": "Object that contains unit count data, Undefined if it has no value.",
+                        "properties": {
+                            "unitValue": {
+                                "description": "The field returns the specified weight or volume to facilitate per unit pricing. For products measured by volume, weight, or linear dimensions, it provides the total net quantity shipped for a single ASIN (e.g., a 12-pack of 6 fl oz bottles of water = 72 fl oz, or a single 2-liter bottle = 2 liters). For products sold as individual units, it returns the total number of units (e.g., a pack of 12 pens = 12).",
+                                "type": "number",
+                                "format": "double",
+                                "example": 1
+                            },
+                            "unitType": {
+                                "description": "In cases where the product being sold is measured in units that are relevant to the customer’s purchasing decision, the unitType specifies the type of measurement used. For example, a bottle of soda may be measured in fluid ounces, while a box of screws is measured by the number of screws in the box.",
+                                "type": "string",
+                                "example": "Count"
+                            },
+                            "eachUnitCount": {
+                                "description": "The number of units in an ‘each’; where an ‘each’ refers to the smallest component of a product with a UPC, and a unit defines how this ‘each’ is measured.",
+                                "type": "number",
+                                "format": "double"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "salesRankReference": {
+                        "description": "The category node id of the main sales rank. -1 if not available, -2 if listed in launchpad.",
+                        "type": "integer",
+                        "example": 165793011
+                    },
+                    "salesRankReferenceHistory": {
+                        "description": "A long array containing the historical category node id(s) of the main sales rank. This data, if available, can be used to match historical sales ranks provided in the CSV field to their reference category. The category id has the value -1 if not available or -2 if listed in launchpad. Format: `[ keepaTime, category node id, … ]`",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            7333764,
+                            165793011
+                        ]
+                    },
+                    "salesRanks": {
+                        "description": "An object containing sales rank histories. Each key represents the categoryId of the rank, with the history in the corresponding value.",
+                        "type": "object",
+                        "example": {
+                            "165793011": [
+                                7371626,
+                                29,
+                                7372008,
+                                30,
+                                7372414,
+                                31,
+                                7372518,
+                                35
+                            ],
+                            "166225011": [
+                                7369930,
+                                1,
+                                7375618,
+                                3,
+                                7375864,
+                                2,
+                                7376008,
+                                3,
+                                7376106,
+                                2
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "lastSoldUpdate": {
+                        "description": "States the last time Keepa have updated the monthlySold field, in `Keepa Time minutes`. Undefined if the monthlySold has no value.",
+                        "type": "integer",
+                        "example": 7376384
+                    },
+                    "monthlySold": {
+                        "description": "How often this product was bought in the past month. This field represents the bought past month metric found on Amazon search result pages. It is not an estimate. Amazon only provides the data in bracketed ranges such as “50+” or “100+”, rather than as exact figures. Undefined if it has no value. Most ASINs do not have this value set. The value is variation specific.",
+                        "type": "integer",
+                        "example": 20000
+                    },
+                    "monthlySoldHistory": {
+                        "description": "Contains historical values of the monthlySold field. Undefined if it has no value. Format: `[ keepaTime, monthlySold, … ]`",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            7375948,
+                            20000,
+                            7375956,
+                            30000,
+                            7376044,
+                            20000,
+                            7376052,
+                            30000,
+                            7376136,
+                            20000
+                        ]
+                    },
+                    "rentalDetails": {
+                        "description": "Contains the rental details description of the rental buy box offer. null if not available. Accessible only if the offers and rental parameters were used in the Product Request.",
+                        "type": "string",
+                        "example": "Rented from: RentU Rental Price One Semester: $25.24 Extension Prices 15 Day: $12.61 Additional Semester: $25.24 Buyout Price: $34.89. Any rental and extension fees paid will be applied towards the buyout price of the book."
+                    },
+                    "rentalSellerId": {
+                        "description": "Contains the seller id of the rental buy box offer. null if not available. Accessible only if the offers and rental parameters were used in the Product Request.",
+                        "type": "string",
+                        "example": "A2L77EE7U53NWQ"
+                    },
+                    "rentalPrices": {
+                        "description": "This object contains the rental prices (as described in the rentalDetails field) initialPrice, shortExtnPrice, longExtnPrice, and fullPrice. null if not available. Accessible only if the offers and rental parameters were used in the Product Request.",
+                        "type": "object",
+                        "example": null,
+                        "additionalProperties": {
+                            "type": "integer"
+                        }
+                    },
+                    "reviews": {
+                        "description": "This object contains variation specific review and rating counts histories as well as a last update timestamp. null if not available. It is not possible to force an update to the reviews object data. For non-variation specific ratings and review data access the csv field. Accessible only if the rating parameter was used in the Product Request.",
+                        "properties": {
+                            "lastUpdate": {
+                                "description": "The last update timestamp in `Keepa Time minutes`.",
+                                "type": "integer",
+                                "example": 7365044
+                            },
+                            "ratingCount": {
+                                "description": "Variation specific rating counts history. Format: `[ keepaTime, ratingCount, … ]`",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    7353286,
+                                    34550,
+                                    7363060,
+                                    34590,
+                                    7365044,
+                                    34608
+                                ]
+                            },
+                            "reviewCount": {
+                                "description": "Variation specific review counts history. Format: `[ keepaTime, reviewCount, … ]`",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    7335552,
+                                    5383,
+                                    7339328,
+                                    5385,
+                                    7349412,
+                                    5393,
+                                    7353286,
+                                    5396,
+                                    7363060,
+                                    5408,
+                                    7365044,
+                                    5411
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "liveOffersOrder": {
+                        "description": "Optional field, set only if the offers parameter was used in the Product Request. Contains an ordered array of index positions in the offers array for all Marketplace Offer Objects retrieved for this call. If no offers were found, the field will be null. The sequence of integers reflects the ordering of the offers on the Amazon offer page (for all conditions). Since the offers field contains historical offers as well as current offers, one can use this array to look up all offers that are currently listed on Amazon in the correct order. Note: If there are identical offers (same seller, same condition, same shipping type, and same condition text) Keepa only track the lowest-priced one. If this happens, there will be duplicate offer indexes in the liveOffersOrder field at the position of the omitted duplicate (higher-priced) offer - all pointing to the lowest-priced offer’s index.\n\nExample: [ 3, 5, 2, 18, 15 ] - The offer with the array index 3 of the offers field is currently the first one listed on the offer listings page on Amazon, followed by the offer with the index 5, and so on.\n\nExample with duplicates: [ 3, 5, 2, 18, 5 ] - The second offer, as listed on Amazon, is a lower-priced duplicate of the 5th offer on Amazon. The lower-priced one is included in the offers field at index 5.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6
+                        ]
+                    },
+                    "buyBoxSellerIdHistory": {
+                        "description": "Optional field, set only if the offers or buybox parameter was used in the Product Request. Contains a history of sellerIds that held the Buy Box in the format: `Keepa time minutes, sellerId, […]`. If no seller qualified for the Buy Box, the sellerId “-1” is used (suppressed Buy Box). If Keepa were unable to identify the seller or if the product was out of stock (no seller), the sellerId is “-2”.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "7339514",
+                            "ATVPDKIKX0DER"
+                        ]
+                    },
+                    "buyBoxUsedHistory": {
+                        "description": "Optional field, set only if the offers or buybox parameter was used in the Product Request. A history of used buy box winners, containing the sellerIds, offer sub-condition, and FBA status in the format: `Keepa time minutes, seller id, condition, isFBA, […]`. If no seller qualified for the used buy box, the sellerId “” (empty String) is used.\n\nCondition can have the following values:\n\n“2” - Used - Like New, “3” - Used - Very Good, “4” - Used - Good, “5” - Used - Acceptable\n\nisFBA is either “1” - offer is FBA or “0” - offer is merchant fulfilled.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "2860926",
+                            "ATVPDKIKX0DER",
+                            "4",
+                            "1"
+                        ]
+                    },
+                    "isRedirectASIN": {
+                        "description": "Valid only if the offers parameter was used in the Product Request. Boolean indicating if the ASIN will be redirected to another one on Amazon (example: the ASIN has the color black variation, which is not available and is redirected on Amazon to the color red).",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "isSNS": {
+                        "description": "Valid only if the offers parameter was used in the Product Request. Boolean indicating if the product’s Buy Box is available for subscribe and save.",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "offersSuccessful": {
+                        "description": "Valid only if the offers parameter was used in the Product Request. Boolean indicating if the system was able to retrieve fresh offer information. Retrieval of fresh offers will always fail if the product has no offers (compare COUNT_* csv entries).",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "offers": {
+                        "description": "Optional field, set only if the `offers` parameter was used. Contains Marketplace Offer Objects.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/KeepaProductOffer"
+                        }
+                    },
+                    "stats": {
+                        "$ref": "#/components/schemas/KeepaProductStats",
+                        "description": "Contains a Statistics Object."
+                    },
+                    "csv": {
+                        "$ref": "#/components/schemas/KeepaProductCsv",
+                        "description": "A two-dimensional history array containing the product’s historical data. Access the first dimension index using the following enum/constants: \n\n0 - AMAZON, \n\n1 - NEW, \n\n2 - USED, \n\n3 - SALES, \n\n4 - LISTPRICE, \n\n5 - COLLECTIBLE, \n\n6 - REFURBISHED, \n\n7 - NEW_FBM_SHIPPING, \n\n8 - LIGHTNING_DEAL, \n\n9 - WAREHOUSE, \n\n10 - NEW_FBA, \n\n11 - COUNT_NEW, \n\n12 - COUNT_USED, \n\n13 - COUNT_REFURBISHED, \n\n14 - COUNT_COLLECTIBLE, \n\n15 - EXTRA_INFO_UPDATES, \n\n16 - RATING, \n\n17 - COUNT_REVIEWS, \n\n18 - BUY_BOX_SHIPPING, \n\n19 - USED_NEW_SHIPPING, \n\n20 - USED_VERY_GOOD_SHIPPING, \n\n21 - USED_GOOD_SHIPPING, \n\n22 - USED_ACCEPTABLE_SHIPPING, \n\n23 - COLLECTIBLE_NEW_SHIPPING, \n\n24 - COLLECTIBLE_VERY_GOOD_SHIPPING, \n\n25 - COLLECTIBLE_GOOD_SHIPPING, \n\n26 - COLLECTIBLE_ACCEPTABLE_SHIPPING, \n\n27 - REFURBISHED_SHIPPING, \n\n28 - EBAY_NEW_SHIPPING, \n\n29 - EBAY_USED_SHIPPING, \n\n30 - TRADE_IN, \n\n31 - RENTAL, \n\n32 - BUY_BOX_USED_SHIPPING, \n\n33 - PRIME_EXCL. \n\nThe second dimension contains the price/value history in the format `Keepa time minutes, value, […]` or, if the type includes `*_SHIPPING` costs, the format: `Keepa time minutes, price, shipping costs, […]`. If history is unavailable, it is `null`. The price is an integer of the respective Amazon locale’s smallest currency unit (e.g., euro cents or yen). If no offer was available in the given interval (e.g., out of stock), the price has the value -1. \n\nImportant csv information: \n\nKeepa only append a new entry to the history array if the price/value changed, not every time Keepa update the product. \n\nShipping and Handling costs are not included unless specified. \n\nAmazon is considered to be part of the marketplace. If Amazon has the overall lowest new price, the marketplace new price in the corresponding time interval is identical to the Amazon price. \n\nThe following types are only set if the offers parameter was used in the Product Request: NEW_FBM_SHIPPING, WAREHOUSE, NEW_FBA, RATING, COUNT_REVIEWS, BUY_BOX_SHIPPING, USED_SHIPPING, COLLECTIBLE_SHIPPING, REFURBISHED_SHIPPING, BUY_BOX_USED_SHIPPING, and PRIME_EXCL \n\nAbout Lightning deals: If a deal is currently active, the last entry of the history array will contain the end date (a future date) with a price of -1. When accessing the current deal price, handle this special case. Alternatively, use the current price array of the stats object to access the current price. If no deal is currently active but the last entry has the value -1 with a date in the future, it means an upcoming deal is announced (scheduled to start at that date). \n\nAbout eBay prices: eBay listings often have incorrect information and/or product codes, causing item mismatches and incorrect pricing information. Use eBay price history information with caution and do not rely on their accuracy. Keepa update eBay prices at different intervals than Amazon prices. \n\nKeepa can add new data types to the csv field from time to time without announcement. Do not expect a fixed size of the first array dimension in your implementation."
+                    }
+                },
+                "type": "object"
+            },
+            
+        },
+        "securitySchemes": {
+            "api_key": {
+                "type": "apiKey",
+                "description": "To authenticate with Keepa, API key should be included in your requests as a query parameter `key`",
+                "name": "key",
+                "in": "query"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Product Request",
+            "description": "Retrieves the product object for the specified ASIN and domain."
+        }
+    ]
+}
